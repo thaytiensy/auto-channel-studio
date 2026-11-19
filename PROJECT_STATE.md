@@ -1,7 +1,7 @@
 # Auto Channel Studio — Project State
 
 ## 1. Project Overview & Scope
-- **Current Sprint**: Sprint 1.3 — Per-Scene Audio Generator & ffprobe Validation
+- **Current Sprint**: Sprint 1.4 — FFmpeg Worker Video Rendering & Safe Zone Preview
 - **Runtime & Framework Versions**:
   - **Next.js**: 16.4.6 (App Router)
   - **React**: 19.3.0
@@ -15,8 +15,8 @@
   - `zod`: Schema validation & contract enforcement
   - `lucide-react`: UI iconography
 - **Worker Infrastructure**:
-  - Standalone Node.js process using native built-in modules (`node:http`, `node:child_process`, `node:util`)
-  - External binaries: System `ffmpeg` and `ffprobe` (Gyan.FFmpeg build with `libx264` and `ass` filter)
+  - Standalone Node.js process using native built-in modules (`node:http`, `node:child_process`, `node:fs`, `node:path`, `node:util`)
+  - External binaries: System `ffmpeg` and `ffprobe` (Gyan.FFmpeg build with `libx264`, `yuv420p`, and `ass` filter)
 - **Constraint Compliance**:
   - Strictly no `any` in TypeScript code
   - Every file in `src/` and `worker/` <= 200 lines
@@ -48,8 +48,14 @@
   - Audio Processor Module (`src/lib/audio/audio-processor.ts`) with `mockGenerateTTS` (atomic path creation in `worker/tmp`) and `getAudioDurationMs` (`ffprobe` duration probing with non-crashing 3500ms fallback)
   - Integration into Script Generation API (`src/app/api/projects/generate-script/route.ts`) generating audio paths and probed duration per scene
   - Updated Scene UI (`src/components/SceneBlock.tsx`) displaying audio path and duration without native audio elements
+- **Sprint 1.4 — FFmpeg Worker Video Rendering & Safe Zone Preview**:
+  - Worker Video Renderer (`worker/render-scene.mjs`) generating 1080x1920 MP4 via `execFile` (`libx264`, `-pix_fmt yuv420p`, silent audio fallback)
+  - Worker Endpoint `POST /render-scene` on `worker/server.mjs`
+  - Next.js Bridge Route (`src/app/api/projects/render-scene/route.ts`) with timeout and HTTP 503 worker offline messaging
+  - Safe Zone Preview Component (`src/components/SafeZonePreview.tsx`) simulating TikTok/Reels phone layout and interactive overlay
+  - Scene Block Render Controls (`src/components/SceneBlock.tsx`) and 2-column layout in `src/components/ProjectResultView.tsx`
 
 ## 5. In-Progress & Blockers
-- **Status**: Sprint 1.3 complete and verified
+- **Status**: Sprint 1.4 complete and verified
 - **Blockers**: None
-- **Next**: Sprint 1.4 — FFmpeg Video Rendering & Safe Zone Preview
+- **Next**: Sprint 1.5 — Final Multi-Scene Concat & Downloadable MP4 Output

@@ -1,6 +1,8 @@
 import http from "node:http";
+import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { renderSceneMp4 } from "./render-scene.mjs";
 
 const execFileAsync = promisify(execFile);
 const HOST = "127.0.0.1";
@@ -55,12 +57,34 @@ async function getHealthStatus() {
   };
 }
 
+function readJsonBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk;
+      if (body.length > 1e6) {
+        req.destroy();
+        reject(new Error("Payload too large"));
+      }
+    });
+    req.on("end", () => {
+      try {
+        resolve(body ? JSON.parse(body) : {});
+      } catch {
+        reject(new Error("Invalid JSON body"));
+      }
+    });
+    req.on("error", reject);
+  });
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(
     req.url || "/",
     `http://${req.headers.host || "127.0.0.1"}`
   );
 
+  // Health check endpoint
   if (url.pathname === "/health" && req.method === "GET") {
     try {
       const health = await getHealthStatus();
@@ -73,6 +97,45 @@ const server = http.createServer(async (req, res) => {
     } catch (err) {
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ status: "error", error: String(err) }));
+    }
+    return;
+  }
+
+  // Render scene endpoint
+  if (url.pathname === "/render-scene" && req.method === "POST") {
+    try {
+      const body = await readJsonBody(req);
+      const { sceneId, durationMs, audioPath } = body;
+
+      if (!sceneId || typeof sceneId !== "string") {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({ status: "error", message: "sceneId is required" })
+        );
+        return;
+      }
+
+      const outputDir = path.join(process.cwd(), "worker", "tmp");
+      const result = await renderSceneMp4({
+        sceneId,
+        durationMs: Number(durationMs) || 3500,
+        audioPath: audioPath || "",
+        outputDir,
+      });
+
+      res.writeHead(200, {
+        "Content-Type": "application/json; charset=utf-8",
+        "Access-Control-Allow-Origin": "*",
+      });
+      res.end(JSON.stringify({ status: "ok", ...result }));
+    } catch (err) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          status: "error",
+          message: err?.message || "Render failed",
+        })
+      );
     }
     return;
   }

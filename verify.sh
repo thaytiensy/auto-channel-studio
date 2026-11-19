@@ -26,7 +26,7 @@ handle_failure() {
 
     const handoff = {
       status: 'failed',
-      task: 'Sprint 1.3 Per-Scene Audio & ffprobe',
+      task: 'Sprint 1.4 FFmpeg Worker Video Rendering & Safe Zone Preview',
       failed_step: '$failed_step',
       errors: errLines,
       next_step: 'Diagnose and fix errors reported in .verify-err.log'
@@ -43,8 +43,9 @@ npm run typecheck >> "$ERR_LOG" 2>&1 || handle_failure "npm run typecheck"
 echo "=== [2/4] Running lint ==="
 npm run lint >> "$ERR_LOG" 2>&1 || handle_failure "npm run lint"
 
-echo "=== [3/4] Checking worker/server.mjs syntax ==="
+echo "=== [3/4] Checking worker syntax ==="
 node --check worker/server.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --check worker/server.mjs"
+node --check worker/render-scene.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --check worker/render-scene.mjs"
 
 echo "=== [4/4] Building Next.js into isolated .next-verify ==="
 NEXT_DIST_DIR=.next-verify npm run build >> "$ERR_LOG" 2>&1 || handle_failure "NEXT_DIST_DIR=.next-verify npm run build"
@@ -60,23 +61,26 @@ node -e "
   const fs = require('fs');
   const handoff = {
     status: 'success',
-    task: 'Sprint 1.3 Per-Scene Audio & ffprobe',
+    task: 'Sprint 1.4 FFmpeg Worker Video Rendering & Safe Zone Preview',
     timestamp: new Date().toISOString(),
     files_modified: [
-      'src/lib/audio/audio-processor.ts',
-      'src/app/api/projects/generate-script/route.ts',
+      'worker/render-scene.mjs',
+      'worker/server.mjs',
+      'src/app/api/projects/render-scene/route.ts',
+      'src/components/SafeZonePreview.tsx',
       'src/components/SceneBlock.tsx',
+      'src/components/ProjectResultView.tsx',
       'PROJECT_STATE.md',
       'verify.sh'
     ],
     errors: [],
-    next_step: 'Sprint 1.4 FFmpeg Video Rendering & Safe Zone Preview'
+    next_step: 'Sprint 1.5 Final Multi-Scene Concat & Downloadable MP4 Output'
   };
   fs.writeFileSync('HANDOFF.json', JSON.stringify(handoff, null, 2), 'utf8');
 "
 
 git add -A
-git commit -m "checkpoint: verified sprint 1.3" || true
+git commit -m "checkpoint: verified sprint 1.4" || true
 
 echo "=== [SUCCESS] Verification passed 100% ==="
 exit 0
