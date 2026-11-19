@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Smartphone,
   Shield,
@@ -8,6 +8,9 @@ import {
   MessageCircle,
   Share2,
   Video,
+  Play,
+  Square,
+  Volume2,
 } from "lucide-react";
 import type { Scene } from "@/schemas";
 
@@ -21,6 +24,35 @@ export function SafeZonePreview({
   renderedVideoPath,
 }: SafeZonePreviewProps) {
   const [showSafeZone, setShowSafeZone] = useState(true);
+  const [playingSceneId, setPlayingSceneId] = useState<string | null>(null);
+  const isPlaying = Boolean(selectedScene && playingSceneId === selectedScene.sceneId);
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [selectedScene?.sceneId]);
+
+  const togglePlayAudio = () => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    if (isPlaying) {
+      window.speechSynthesis.cancel();
+      setPlayingSceneId(null);
+      return;
+    }
+    if (!selectedScene?.spokenText) return;
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(selectedScene.spokenText);
+    utterance.lang = "vi-VN";
+    utterance.rate = 1.05;
+    utterance.onend = () => setPlayingSceneId(null);
+    utterance.onerror = () => setPlayingSceneId(null);
+    window.speechSynthesis.speak(utterance);
+    setPlayingSceneId(selectedScene.sceneId);
+  };
 
   const videoFileName = renderedVideoPath
     ? renderedVideoPath.split(/[/\\]/).pop()
@@ -33,18 +65,34 @@ export function SafeZonePreview({
           <Smartphone className="w-4 h-4 text-emerald-400" />
           Preview Safe Zone (9:16)
         </span>
-        <button
-          type="button"
-          onClick={() => setShowSafeZone((v) => !v)}
-          className={`flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-colors ${
-            showSafeZone
-              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-              : "bg-zinc-800 text-zinc-400 border border-zinc-700"
-          }`}
-        >
-          <Shield className="w-3 h-3" />
-          Safe Zone
-        </button>
+        <div className="flex items-center gap-1.5">
+          {selectedScene && (
+            <button
+              type="button"
+              onClick={togglePlayAudio}
+              className={`flex items-center gap-1 px-2 py-1 text-[11px] font-semibold rounded-lg transition-colors ${
+                isPlaying
+                  ? "bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse"
+                  : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30"
+              }`}
+            >
+              {isPlaying ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+              {isPlaying ? "Dừng" : "Phát Thử"}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowSafeZone((v) => !v)}
+            className={`flex items-center gap-1 px-2 py-1 text-[11px] font-semibold rounded-lg transition-colors ${
+              showSafeZone
+                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                : "bg-zinc-800 text-zinc-400 border border-zinc-700"
+            }`}
+          >
+            <Shield className="w-3 h-3" />
+            Safe Zone
+          </button>
+        </div>
       </div>
 
       <div className="relative w-72 aspect-[9/16] bg-zinc-950 rounded-3xl border-4 border-zinc-800 shadow-2xl overflow-hidden flex flex-col justify-between p-4 text-white select-none">
@@ -55,15 +103,16 @@ export function SafeZonePreview({
               ? `Cảnh #${selectedScene.orderIndex + 1}`
               : "Chưa chọn cảnh"}
           </span>
-          <span>
+          <span className="flex items-center gap-1">
+            {isPlaying && <Volume2 className="w-3 h-3 text-emerald-400 animate-pulse" />}
             {selectedScene ? `${selectedScene.actualDurationMs / 1000}s` : ""}
           </span>
         </div>
 
-        {/* Center content */}
-        <div className="z-10 my-auto text-center px-2">
+        {/* Center content with Ken Burns effect simulation */}
+        <div className={`z-10 my-auto text-center px-2 transition-transform duration-700 ${isPlaying ? "scale-105" : "scale-100"}`}>
           {selectedScene ? (
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {selectedScene.textHook && (
                 <div className="inline-block px-2.5 py-1 bg-amber-400 text-zinc-950 text-[10px] font-extrabold uppercase rounded-md shadow-md">
                   {selectedScene.textHook}
@@ -88,7 +137,9 @@ export function SafeZonePreview({
               <span className="truncate">{videoFileName}</span>
             </div>
           ) : (
-            <span className="text-zinc-500">Chưa render MP4</span>
+            <span className="text-zinc-500">
+              {isPlaying ? "● Đang phát giọng đọc thử nghiệm..." : "Chưa render MP4"}
+            </span>
           )}
         </div>
 

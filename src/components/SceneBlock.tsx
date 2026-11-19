@@ -131,9 +131,22 @@ export function SceneBlock({
       )}
 
       {renderError && (
-        <div className="flex items-center gap-1.5 p-2 bg-red-950/50 border border-red-800/60 rounded-xl text-xs text-red-300">
-          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 text-red-400" />
-          <span>{renderError}</span>
+        <div className="p-3 bg-zinc-950 border border-amber-500/30 rounded-xl text-xs space-y-2">
+          <div className="flex items-center gap-1.5 text-amber-300 font-bold">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 text-amber-400" />
+            <span>Cần FFmpeg Render Worker</span>
+          </div>
+          <p className="text-[11px] text-zinc-300 leading-relaxed">
+            Trên web Vercel, bạn có thể nhấn <strong>&ldquo;Phát Thử&rdquo;</strong> ở khung Safe Zone bên phải để nghe giọng đọc và xem chuyển động. Để xuất file MP4 nối toàn bộ bằng FFmpeg, hãy mở Studio tại:
+          </p>
+          <a
+            href="http://localhost:3000"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl transition-all shadow-md shadow-emerald-500/20"
+          >
+            Mở Local Studio (http://localhost:3000) &rarr;
+          </a>
         </div>
       )}
 

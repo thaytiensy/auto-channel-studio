@@ -133,8 +133,22 @@ export function ProjectResultView({
       </div>
 
       {renderFullError && (
-        <div className="p-3.5 bg-red-950/50 border border-red-800/60 rounded-xl text-xs text-red-300">
-          {renderFullError}
+        <div className="p-4 bg-zinc-900 border border-amber-500/30 rounded-2xl text-xs space-y-2">
+          <div className="flex items-center gap-1.5 text-amber-300 font-bold">
+            <AlertTriangle className="w-4 h-4 text-amber-400" />
+            <span>Chế độ Cloud: Cần FFmpeg Worker để nối MP4</span>
+          </div>
+          <p className="text-zinc-300 leading-relaxed text-[11px]">
+            Hệ thống đã chuẩn bị xong kịch bản & các phân cảnh. Bạn hãy mở Studio cục bộ để FFmpeg xuất file video 1080x1920 hoàn chỉnh:
+          </p>
+          <a
+            href="http://localhost:3000"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl transition-all shadow-md shadow-emerald-500/20"
+          >
+            Mở Local Studio (http://localhost:3000) &rarr;
+          </a>
         </div>
       )}
 
