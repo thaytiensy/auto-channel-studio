@@ -62,20 +62,20 @@ export function SceneTextEditor({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3 p-3 bg-zinc-950/80 border border-zinc-800 rounded-xl">
       <div>
-        <label className="block text-[11px] font-medium text-zinc-500 mb-1">
+        <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
           Lời thoại (Spoken Text):
         </label>
         <textarea
           value={editText}
           onChange={(e) => setEditText(e.target.value)}
           rows={2}
-          className="w-full p-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-emerald-400 rounded-lg text-xs leading-relaxed text-zinc-800 dark:text-zinc-200 resize-none focus:outline-none"
+          className="w-full p-2.5 bg-zinc-900 border border-emerald-500/50 rounded-xl text-xs leading-relaxed text-zinc-100 resize-none focus:outline-none focus:ring-1 focus:ring-emerald-500"
         />
       </div>
       <div>
-        <label className="block text-[11px] font-medium text-zinc-500 mb-1">
+        <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
           Mô tả ảnh AI (Visual Prompt):
         </label>
         <textarea
@@ -83,16 +83,16 @@ export function SceneTextEditor({
           onChange={(e) => setEditPrompt(e.target.value)}
           rows={2}
           placeholder="Mô tả phong cách ảnh bằng tiếng Anh..."
-          className="w-full p-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs leading-relaxed text-zinc-800 dark:text-zinc-200 resize-none focus:outline-none"
+          className="w-full p-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-xs leading-relaxed text-zinc-300 resize-none focus:outline-none focus:border-zinc-700"
         />
       </div>
-      {error && <p className="text-[11px] text-red-500">{error}</p>}
+      {error && <p className="text-[11px] text-red-400">{error}</p>}
       <div className="flex gap-2 pt-1">
         <button
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl transition-all disabled:opacity-50"
         >
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
           Lưu Cảnh
@@ -100,7 +100,7 @@ export function SceneTextEditor({
         <button
           type="button"
           onClick={onCancel}
-          className="px-3 py-1.5 text-xs font-medium bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg transition-colors"
+          className="px-3.5 py-1.5 text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl transition-colors"
         >
           Huỷ
         </button>

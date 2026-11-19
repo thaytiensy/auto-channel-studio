@@ -3,6 +3,7 @@ import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
+import { getWorkerTmpDir } from "@/lib/storage/paths";
 
 const execFileAsync = promisify(execFile);
 
@@ -56,7 +57,7 @@ export async function generateSceneSpeech({
   sceneId,
   voice = "vi-VN-HoaiMyNeural",
 }: GenerateSpeechOptions): Promise<string> {
-  const tmpDir = path.join(process.cwd(), "worker", "tmp");
+  const tmpDir = getWorkerTmpDir();
   fs.mkdirSync(tmpDir, { recursive: true });
 
   const fileName = `${sceneId}.mp3`;
@@ -91,7 +92,7 @@ export async function mockGenerateTTS(
   text: string,
   sceneId: string
 ): Promise<string> {
-  const tmpDir = path.join(process.cwd(), "worker", "tmp");
+  const tmpDir = getWorkerTmpDir();
   fs.mkdirSync(tmpDir, { recursive: true });
   const filePath = path.join(tmpDir, `scene_${sceneId}.mp3`);
   const mockPayload = `[MOCK_AUDIO_FOR_SCENE_${sceneId}]\n${text}`;

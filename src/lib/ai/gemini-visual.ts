@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { GoogleGenAI } from "@google/genai";
+import { getWorkerTmpDir } from "@/lib/storage/paths";
 
 export interface GenerateVisualParams {
   visualPrompt: string;
@@ -23,7 +24,7 @@ export async function generateSceneVisual({
     return "";
   }
 
-  const tmpDir = path.join(process.cwd(), "worker", "tmp");
+  const tmpDir = getWorkerTmpDir();
   fs.mkdirSync(tmpDir, { recursive: true });
   const outPath = path.join(tmpDir, `${sceneId}.png`);
 

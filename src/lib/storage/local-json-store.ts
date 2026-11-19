@@ -1,12 +1,19 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { z } from "zod";
+import { getStorageDir } from "./paths";
 
-const DATA_DIR = path.join(process.cwd(), ".local-data");
+// In-memory fallback cache for Serverless/read-only container environments
+const memoryCache = new Map<string, unknown>();
 
 async function ensureDataDir(): Promise<string> {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  return DATA_DIR;
+  const dir = getStorageDir();
+  try {
+    await fs.mkdir(dir, { recursive: true });
+  } catch (err) {
+    console.warn(`[storage] Could not mkdir ${dir}, using in-memory mode:`, err);
+  }
+  return dir;
 }
 
 export async function readJsonStore<T>(
@@ -14,24 +21,25 @@ export async function readJsonStore<T>(
   schema: z.ZodType<T>,
   fallbackValue: T
 ): Promise<T> {
-  const dir = await ensureDataDir();
-  const filePath = path.join(dir, fileName);
+  if (memoryCache.has(fileName)) {
+    try {
+      return schema.parse(memoryCache.get(fileName));
+    } catch {
+      // ignore parse error and proceed to disk read
+    }
+  }
 
   try {
+    const dir = await ensureDataDir();
+    const filePath = path.join(dir, fileName);
     const raw = await fs.readFile(filePath, "utf-8");
     const parsed: unknown = JSON.parse(raw);
-    return schema.parse(parsed);
-  } catch (err: unknown) {
-    if (
-      err &&
-      typeof err === "object" &&
-      "code" in err &&
-      err.code === "ENOENT"
-    ) {
-      await writeJsonStore(fileName, fallbackValue, schema);
-      return fallbackValue;
-    }
-    throw err;
+    const validated = schema.parse(parsed);
+    memoryCache.set(fileName, validated);
+    return validated;
+  } catch {
+    memoryCache.set(fileName, fallbackValue);
+    return fallbackValue;
   }
 }
 
@@ -40,23 +48,27 @@ export async function writeJsonStore<T>(
   data: T,
   schema: z.ZodType<T>
 ): Promise<void> {
-  const dir = await ensureDataDir();
-  const filePath = path.join(dir, fileName);
   const validated = schema.parse(data);
-  const jsonContent = JSON.stringify(validated, null, 2);
-
-  const tmpPath = path.join(
-    dir,
-    `${fileName}.${Date.now()}.${Math.random().toString(36).slice(2, 7)}.tmp`
-  );
-
-  await fs.writeFile(tmpPath, jsonContent, "utf-8");
+  memoryCache.set(fileName, validated);
 
   try {
-    await fs.rename(tmpPath, filePath);
-  } catch {
-    // Fallback for Windows cross-lock or atomic replace
-    await fs.copyFile(tmpPath, filePath);
-    await fs.unlink(tmpPath);
+    const dir = await ensureDataDir();
+    const filePath = path.join(dir, fileName);
+    const jsonContent = JSON.stringify(validated, null, 2);
+
+    const tmpPath = path.join(
+      dir,
+      `${fileName}.${Date.now()}.${Math.random().toString(36).slice(2, 7)}.tmp`
+    );
+
+    await fs.writeFile(tmpPath, jsonContent, "utf-8");
+    try {
+      await fs.rename(tmpPath, filePath);
+    } catch {
+      await fs.copyFile(tmpPath, filePath);
+      await fs.unlink(tmpPath).catch(() => null);
+    }
+  } catch (err) {
+    console.warn(`[storage] Disk write failed for ${fileName}, saved in memory:`, err);
   }
 }

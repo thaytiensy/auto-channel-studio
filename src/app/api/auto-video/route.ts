@@ -106,20 +106,29 @@ export async function POST(req: Request): Promise<NextResponse> {
     });
     await repo.projects.create(project);
 
-    // 3. Gọi Worker render các cảnh và ghép video hoàn chỉnh
-    const workerUrl = process.env.WORKER_URL || "http://127.0.0.1:4001";
-    const workerRes = await fetch(`${workerUrl}/render-project`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ projectId, scenes: completedScenes }),
-      signal: AbortSignal.timeout(90000),
-    });
-
-    if (!workerRes.ok) {
-      throw new Error("Render Worker gặp sự cố khi tạo video tự động");
+    // 3. Gọi Worker render các cảnh và ghép video nếu worker đang chạy
+    let isRendered = false;
+    try {
+      const workerUrl = process.env.WORKER_URL || "http://127.0.0.1:4001";
+      const workerRes = await fetch(`${workerUrl}/render-project`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, scenes: completedScenes }),
+        signal: AbortSignal.timeout(60000),
+      });
+      if (workerRes.ok) {
+        isRendered = true;
+      }
+    } catch {
+      // Worker offline on serverless (e.g. Vercel), project stays audio_ready
     }
 
-    await repo.projects.update({ ...project, status: "done", updatedAt: new Date().toISOString() });
+    const finalStatus = isRendered ? "done" : "audio_ready";
+    await repo.projects.update({
+      ...project,
+      status: finalStatus,
+      updatedAt: new Date().toISOString(),
+    });
 
     const totalDurationMs = completedScenes.reduce((acc, s) => acc + s.actualDurationMs, 0);
     const fixedLink = `/api/projects/download/${projectId}`;
@@ -130,6 +139,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       title: finalTopic,
       videoUrl: fixedLink,
       downloadUrl: fixedLink,
+      isRendered,
       durationMs: totalDurationMs,
       scenesCount: completedScenes.length,
       createdAt: now,

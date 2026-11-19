@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Home, FolderOpen, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 import type { ProjectManifest } from "@/schemas";
 import { ProjectResultView } from "@/components/ProjectResultView";
 
@@ -47,13 +47,13 @@ function ProjectDetailContent() {
   return (
     <>
       {loading && (
-        <div className="flex items-center gap-2 text-zinc-500 text-sm">
-          <Loader2 className="w-4 h-4 animate-spin" /> Đang tải dự án...
+        <div className="flex items-center justify-center py-20 gap-2 text-zinc-500 text-xs">
+          <Loader2 className="w-4 h-4 animate-spin text-emerald-400" /> Đang tải thông tin dự án...
         </div>
       )}
       {error && (
-        <div className="flex items-start gap-2 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl text-sm text-red-600 dark:text-red-400">
-          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+        <div className="flex items-start gap-2 p-4 bg-red-950/50 border border-red-800/60 rounded-xl text-xs text-red-300">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-400" />
           <span>{error}</span>
         </div>
       )}
@@ -66,31 +66,24 @@ function ProjectDetailContent() {
 
 export default function ProjectDetailPage() {
   return (
-    <main className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-6 md:p-12">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
-          >
-            <Home className="w-3.5 h-3.5" /> Trang Chủ
-          </Link>
-          <span className="text-zinc-300 dark:text-zinc-700">/</span>
+    <main className="min-h-screen bg-zinc-950 p-6 md:p-12">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center gap-2 mb-6">
           <Link
             href="/projects"
-            className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
           >
-            <FolderOpen className="w-3.5 h-3.5" /> Dự Án
+            <ArrowLeft className="w-3.5 h-3.5" /> Kho Dự Án
           </Link>
-          <span className="text-zinc-300 dark:text-zinc-700">/</span>
-          <span className="text-xs font-mono text-zinc-600 dark:text-zinc-400">
-            Chi tiết
+          <span className="text-zinc-700">/</span>
+          <span className="text-xs font-semibold text-emerald-400">
+            Chi Tiết Dự Án
           </span>
         </div>
         <Suspense
           fallback={
-            <div className="flex items-center gap-2 text-zinc-500 text-sm">
-              <Loader2 className="w-4 h-4 animate-spin" /> Đang tải...
+            <div className="flex items-center justify-center py-20 gap-2 text-zinc-500 text-xs">
+              <Loader2 className="w-4 h-4 animate-spin text-emerald-400" /> Đang tải...
             </div>
           }
         >

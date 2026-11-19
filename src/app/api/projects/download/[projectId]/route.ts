@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { getWorkerTmpDir } from "@/lib/storage/paths";
 
 interface RouteContext {
   params: Promise<{ projectId: string }>;
@@ -20,9 +21,7 @@ export async function GET(
   }
 
   const filePath = path.join(
-    process.cwd(),
-    "worker",
-    "tmp",
+    getWorkerTmpDir(),
     `${projectId}_final.mp4`
   );
 
