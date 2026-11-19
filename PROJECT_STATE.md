@@ -75,8 +75,13 @@
   - `generateSceneVisual()` via Gemini Imagen 3 with graceful quota fallback
   - Ken Burns zoompan motion filter chain in `worker/render-scene.mjs`
   - Integrated scene editing for both spoken text and visual prompt in `SceneBlock.tsx`
+- **Packaging & Auto MXH Pipeline (Phase 2 Extension)**:
+  - Auto Video Generation API (`/api/auto-video`) supporting both direct topics and fixed source links
+  - Auto MXH Video Studio UI (`/auto`) with real-time pipeline status and 1-click fixed link copying
+  - Desktop Packaging: `start-app.bat` launcher, `scripts/start-all.mjs` multi-process orchestrator, and Desktop Shortcut `.lnk`
+  - Command-line automation tool `scripts/auto-cli.mjs` (`npm run auto:video`)
 
 ## 5. In-Progress & Blockers
-- **Status**: Phase 2 fully complete and verified — Real AI video production pipeline operational
+- **Status**: Packaging & Auto MXH Pipeline complete — Packaged desktop application & fixed-link video engine live
 - **Blockers**: None
-- **Next**: Phase 3 — Batch Production, Automated Scheduling, & Publishing Pipelines
+- **Next**: Phase 3 — Scheduled Background Cron & Social Media Auto-Publishing

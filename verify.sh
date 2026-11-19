@@ -47,6 +47,8 @@ node --check worker/cleanup.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --che
 node --check worker/subtitle-builder.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --check worker/subtitle-builder.mjs"
 node --check worker/ffmpeg-filters.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --check worker/ffmpeg-filters.mjs"
 node --check scripts/visual-check.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --check scripts/visual-check.mjs"
+node --check scripts/start-all.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --check scripts/start-all.mjs"
+node --check scripts/auto-cli.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --check scripts/auto-cli.mjs"
 
 echo "=== [4/4] Building Next.js into isolated .next-verify ==="
 NEXT_DIST_DIR=.next-verify npm run build >> "$ERR_LOG" 2>&1 || handle_failure "NEXT_DIST_DIR=.next-verify npm run build"

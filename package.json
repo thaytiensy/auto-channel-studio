@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "worker": "node worker/server.mjs",
     "verify": "bash verify.sh",
-    "visual:check": "node scripts/visual-check.mjs"
+    "visual:check": "node scripts/visual-check.mjs",
+    "app:start": "node scripts/start-all.mjs",
+    "auto:video": "node scripts/auto-cli.mjs"
   },
   "dependencies": {
     "@google/genai": "^3.6.1",
