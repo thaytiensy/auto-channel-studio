@@ -3,6 +3,7 @@ import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { renderSceneMp4 } from "./render-scene.mjs";
+import { concatProjectMp4 } from "./concat-project.mjs";
 
 const execFileAsync = promisify(execFile);
 const HOST = "127.0.0.1";
@@ -62,7 +63,7 @@ function readJsonBody(req) {
     let body = "";
     req.on("data", (chunk) => {
       body += chunk;
-      if (body.length > 1e6) {
+      if (body.length > 2e6) {
         req.destroy();
         reject(new Error("Payload too large"));
       }
@@ -101,12 +102,10 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Render scene endpoint
+  // Render single scene endpoint
   if (url.pathname === "/render-scene" && req.method === "POST") {
     try {
-      const body = await readJsonBody(req);
-      const { sceneId, durationMs, audioPath } = body;
-
+      const { sceneId, durationMs, audioPath } = await readJsonBody(req);
       if (!sceneId || typeof sceneId !== "string") {
         res.writeHead(400, { "Content-Type": "application/json" });
         res.end(
@@ -114,7 +113,6 @@ const server = http.createServer(async (req, res) => {
         );
         return;
       }
-
       const outputDir = path.join(process.cwd(), "worker", "tmp");
       const result = await renderSceneMp4({
         sceneId,
@@ -122,7 +120,6 @@ const server = http.createServer(async (req, res) => {
         audioPath: audioPath || "",
         outputDir,
       });
-
       res.writeHead(200, {
         "Content-Type": "application/json; charset=utf-8",
         "Access-Control-Allow-Origin": "*",
@@ -134,6 +131,39 @@ const server = http.createServer(async (req, res) => {
         JSON.stringify({
           status: "error",
           message: err?.message || "Render failed",
+        })
+      );
+    }
+    return;
+  }
+
+  // Render entire project (concat all scenes) endpoint
+  if (url.pathname === "/render-project" && req.method === "POST") {
+    try {
+      const { projectId, scenes } = await readJsonBody(req);
+      if (!projectId || !Array.isArray(scenes) || scenes.length === 0) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            status: "error",
+            message: "projectId and non-empty scenes array are required",
+          })
+        );
+        return;
+      }
+      const outputDir = path.join(process.cwd(), "worker", "tmp");
+      const result = await concatProjectMp4({ projectId, scenes, outputDir });
+      res.writeHead(200, {
+        "Content-Type": "application/json; charset=utf-8",
+        "Access-Control-Allow-Origin": "*",
+      });
+      res.end(JSON.stringify({ status: "ok", ...result }));
+    } catch (err) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          status: "error",
+          message: err?.message || "Project concat failed",
         })
       );
     }

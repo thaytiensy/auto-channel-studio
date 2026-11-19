@@ -26,7 +26,7 @@ handle_failure() {
 
     const handoff = {
       status: 'failed',
-      task: 'Sprint 1.4 FFmpeg Worker Video Rendering & Safe Zone Preview',
+      task: 'Sprint 1.5 Final Multi-Scene Concat & Downloadable MP4 Output',
       failed_step: '$failed_step',
       errors: errLines,
       next_step: 'Diagnose and fix errors reported in .verify-err.log'
@@ -46,6 +46,7 @@ npm run lint >> "$ERR_LOG" 2>&1 || handle_failure "npm run lint"
 echo "=== [3/4] Checking worker syntax ==="
 node --check worker/server.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --check worker/server.mjs"
 node --check worker/render-scene.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --check worker/render-scene.mjs"
+node --check worker/concat-project.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --check worker/concat-project.mjs"
 
 echo "=== [4/4] Building Next.js into isolated .next-verify ==="
 NEXT_DIST_DIR=.next-verify npm run build >> "$ERR_LOG" 2>&1 || handle_failure "NEXT_DIST_DIR=.next-verify npm run build"
@@ -61,26 +62,26 @@ node -e "
   const fs = require('fs');
   const handoff = {
     status: 'success',
-    task: 'Sprint 1.4 FFmpeg Worker Video Rendering & Safe Zone Preview',
+    task: 'Sprint 1.5 Final Multi-Scene Concat & Downloadable MP4 Output',
     timestamp: new Date().toISOString(),
     files_modified: [
+      'worker/concat-project.mjs',
       'worker/render-scene.mjs',
       'worker/server.mjs',
-      'src/app/api/projects/render-scene/route.ts',
-      'src/components/SafeZonePreview.tsx',
-      'src/components/SceneBlock.tsx',
+      'src/app/api/projects/render-full/route.ts',
+      'src/app/api/projects/download/[projectId]/route.ts',
       'src/components/ProjectResultView.tsx',
       'PROJECT_STATE.md',
       'verify.sh'
     ],
     errors: [],
-    next_step: 'Sprint 1.5 Final Multi-Scene Concat & Downloadable MP4 Output'
+    next_step: 'Sprint 2.1 Real AI Integration (Gemini Script + Vbee/Groq Audio + Hybrid Visuals)'
   };
   fs.writeFileSync('HANDOFF.json', JSON.stringify(handoff, null, 2), 'utf8');
 "
 
 git add -A
-git commit -m "checkpoint: verified sprint 1.4" || true
+git commit -m "checkpoint: verified sprint 1.5 - mvp pipeline complete" || true
 
 echo "=== [SUCCESS] Verification passed 100% ==="
 exit 0

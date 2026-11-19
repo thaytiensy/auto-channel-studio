@@ -1,7 +1,7 @@
 # Auto Channel Studio — Project State
 
 ## 1. Project Overview & Scope
-- **Current Sprint**: Sprint 1.4 — FFmpeg Worker Video Rendering & Safe Zone Preview
+- **Current Sprint**: Sprint 1.5 — Final Multi-Scene Concat & Downloadable MP4 Output (MVP Pipeline Complete)
 - **Runtime & Framework Versions**:
   - **Next.js**: 16.4.6 (App Router)
   - **React**: 19.3.0
@@ -54,8 +54,14 @@
   - Next.js Bridge Route (`src/app/api/projects/render-scene/route.ts`) with timeout and HTTP 503 worker offline messaging
   - Safe Zone Preview Component (`src/components/SafeZonePreview.tsx`) simulating TikTok/Reels phone layout and interactive overlay
   - Scene Block Render Controls (`src/components/SceneBlock.tsx`) and 2-column layout in `src/components/ProjectResultView.tsx`
+- **Sprint 1.5 — Final Multi-Scene Concat & Downloadable MP4 Output (MVP Pipeline Complete)**:
+  - Multi-scene Concat Engine (`worker/concat-project.mjs`) using normalized POSIX paths and `-safe 0`
+  - Worker Endpoint `POST /render-project` on `worker/server.mjs`
+  - Next.js Render-Full Bridge Route (`src/app/api/projects/render-full/route.ts`)
+  - Next.js Download Streaming Route (`src/app/api/projects/download/[projectId]/route.ts`) with path traversal safety and `Promise<{ projectId: string }>` params
+  - Studio Finalization Action Bar (`src/components/ProjectResultView.tsx`) with full render button, direct download link, and inline video player
 
 ## 5. In-Progress & Blockers
-- **Status**: Sprint 1.4 complete and verified
+- **Status**: Sprint 1.5 complete and verified — 100% End-to-End MVP Pipeline Operational
 - **Blockers**: None
-- **Next**: Sprint 1.5 — Final Multi-Scene Concat & Downloadable MP4 Output
+- **Next**: Sprint 2.1 — Real AI Integration (Gemini Script + Vbee/Groq Audio + Hybrid Visuals)
