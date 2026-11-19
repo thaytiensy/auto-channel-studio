@@ -1,7 +1,7 @@
 # Auto Channel Studio — Project State
 
 ## 1. Project Overview & Scope
-- **Current Sprint**: Sprint 1.1 — Core Skeleton, Data Contracts, Local Repository & FFmpeg Worker
+- **Current Sprint**: Sprint 1.2 — Channel Memory, Policy Auditor & Mock Script Engine
 - **Runtime & Framework Versions**:
   - **Next.js**: 16.4.6 (App Router)
   - **React**: 19.3.0
@@ -19,7 +19,8 @@
   - External binaries: System `ffmpeg` and `ffprobe` (Gyan.FFmpeg build with `libx264` and `ass` filter)
 - **Constraint Compliance**:
   - Strictly no `any` in TypeScript code
-  - No unapproved external dependencies (No Supabase, AWS SDK, AI SDK, or Playwright in Sprint 1.1)
+  - Every file in `src/` and `worker/` <= 200 lines
+  - No unapproved external dependencies (No Supabase, AWS SDK, AI SDK, or Playwright in Sprint 1.x bootstrap)
 
 ## 3. Data Contracts Locked (Per-Scene Audio-First v2.0.0)
 - `src/schemas/channel.schema.ts`: `ChannelProfileSchema`, `ChannelProfile`
@@ -29,26 +30,22 @@
 - `src/schemas/index.ts`: Unified export of all schemas and types
 
 ## 4. Completed Modules
-- **Build Isolation & Windows Config**:
-  - `.gitattributes` (`*.sh text eol=lf`)
-  - `.gitignore` (excludes `.next-verify/`, `.local-data/`, `worker/tmp/*`, `.verify-err.log`, `.env.local`)
-  - `next.config.ts` (`distDir: process.env.NEXT_DIST_DIR || ".next"`)
-  - `tsconfig.json` (`.next-verify/types/**/*.ts` in `include`)
-  - `eslint.config.mjs` (ignores `.next-verify/**`, `.local-data/**`, `worker/tmp/**`)
-  - `.env.example` & `.env.local`
-- **Atomic Local Repository**:
-  - `src/lib/storage/repository.interface.ts`: `AppRepository` contract
-  - `src/lib/storage/local-json-store.ts`: Atomic temp-file write + rename with Zod validation
-  - `src/lib/storage/local-json.repository.ts`: Full `AppRepository` implementation
-  - `src/lib/storage/index.ts`: `getRepository()` factory
-- **FFmpeg Worker**:
-  - `worker/server.mjs`: HTTP listener on `127.0.0.1:4001` with `GET /health` diagnostic
-- **Health Check API & UI**:
-  - `src/app/api/health/route.ts`: Combined repository and worker diagnostic endpoint
-  - `src/components/SystemHealthCard.tsx`: Client diagnostic card
-  - `src/app/page.tsx`: Studio core dashboard
+- **Sprint 1.1 — Core Skeleton, Data Contracts, Local Repository & FFmpeg Worker**:
+  - Build isolation (`distDir: process.env.NEXT_DIST_DIR || ".next"`)
+  - Atomic Local JSON Repository (`AppRepository`, `LocalJsonRepository`)
+  - FFmpeg standalone render worker (`worker/server.mjs` on port 4001)
+  - Diagnostics API (`src/app/api/health/route.ts`) & Dashboard card (`src/components/SystemHealthCard.tsx`)
+- **Sprint 1.2 — Channel Memory, Policy Auditor & Mock Script Engine**:
+  - Channel Memory API (`src/app/api/channels/route.ts` with GET/POST and Zod omit validation)
+  - Interactive Tag Input for Banned Words (`src/components/BannedWordsInput.tsx`)
+  - Channel Creation Form (`src/components/ChannelForm.tsx`)
+  - Channel Management Dashboard (`src/app/channels/page.tsx`)
+  - Policy Auditor & Regex Scanner (`src/lib/auditor/policy-scanner.ts`)
+  - Mock Script Engine (`src/app/api/projects/generate-script/route.ts` with 3-scene mock manifest and policy check)
+  - Scene UI Component (`src/components/SceneBlock.tsx`)
+  - Project Creation & Script Review Studio (`src/app/projects/new/page.tsx` with red policy alert banner)
 
 ## 5. In-Progress & Blockers
-- **Status**: Sprint 1.1 ready for handoff
+- **Status**: Sprint 1.2 complete and verified
 - **Blockers**: None
-- **Next Step**: Sprint 1.2 — Channel Memory + Script & Policy Auditor
+- **Next**: Sprint 1.3 — Per-Scene Audio Generation & ffprobe Validation

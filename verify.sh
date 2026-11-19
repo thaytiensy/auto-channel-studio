@@ -26,7 +26,7 @@ handle_failure() {
 
     const handoff = {
       status: 'failed',
-      task: 'Sprint 1.1 Bootstrap',
+      task: 'Sprint 1.2 Channel Memory & Script Engine',
       failed_step: '$failed_step',
       errors: errLines,
       next_step: 'Diagnose and fix errors reported in .verify-err.log'
@@ -60,41 +60,32 @@ node -e "
   const fs = require('fs');
   const handoff = {
     status: 'success',
-    task: 'Sprint 1.1 Bootstrap',
+    task: 'Sprint 1.2 Channel Memory & Script Engine',
     timestamp: new Date().toISOString(),
     files_modified: [
-      'package.json',
-      '.gitattributes',
-      '.gitignore',
-      'next.config.ts',
-      'tsconfig.json',
-      'eslint.config.mjs',
-      '.env.example',
-      '.env.local',
-      'src/schemas/channel.schema.ts',
-      'src/schemas/scene.schema.ts',
-      'src/schemas/project.schema.ts',
-      'src/schemas/ledger.schema.ts',
-      'src/schemas/index.ts',
       'src/lib/storage/repository.interface.ts',
-      'src/lib/storage/local-json-store.ts',
       'src/lib/storage/local-json.repository.ts',
-      'src/lib/storage/index.ts',
-      'worker/server.mjs',
-      'src/app/api/health/route.ts',
-      'src/components/SystemHealthCard.tsx',
+      'src/app/api/channels/route.ts',
+      'src/components/BannedWordsInput.tsx',
+      'src/components/ChannelForm.tsx',
+      'src/app/channels/page.tsx',
+      'src/lib/auditor/policy-scanner.ts',
+      'src/app/api/projects/generate-script/route.ts',
+      'src/components/SceneBlock.tsx',
+      'src/components/ProjectResultView.tsx',
+      'src/app/projects/new/page.tsx',
       'src/app/page.tsx',
       'PROJECT_STATE.md',
       'verify.sh'
     ],
     errors: [],
-    next_step: 'Sprint 1.2 Channel Memory & Script Engine'
+    next_step: 'Sprint 1.3 Per-Scene Audio Generation & ffprobe Validation'
   };
   fs.writeFileSync('HANDOFF.json', JSON.stringify(handoff, null, 2), 'utf8');
 "
 
 git add -A
-git commit -m "checkpoint: verified sprint 1.1 at $(date +'%Y-%m-%d %H:%M:%S')" || true
+git commit -m "checkpoint: verified sprint 1.2" || true
 
 echo "=== [SUCCESS] Verification passed 100% ==="
 exit 0

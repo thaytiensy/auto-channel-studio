@@ -1,5 +1,9 @@
 import { z } from "zod";
-import type { AppRepository } from "./repository.interface";
+import type {
+  AppRepository,
+  ChannelCreateInput,
+  ChannelOperations,
+} from "./repository.interface";
 import { readJsonStore, writeJsonStore } from "./local-json-store";
 import {
   ChannelProfileSchema,
@@ -21,6 +25,23 @@ const JobsList = z.array(JobRecordSchema);
 const LedgerList = z.array(CreditLedgerEntrySchema);
 
 export class LocalJsonRepository implements AppRepository {
+  readonly channels: ChannelOperations = {
+    list: () => this.listChannels(),
+    get: (id: string) => this.getChannel(id),
+    create: async (input: ChannelCreateInput): Promise<ChannelProfile> => {
+      const now = new Date().toISOString();
+      const channel: ChannelProfile = {
+        ...input,
+        id: crypto.randomUUID(),
+        pastTopics: input.pastTopics ?? [],
+        createdAt: now,
+        updatedAt: now,
+      };
+      return this.saveChannel(channel);
+    },
+    save: (channel: ChannelProfile) => this.saveChannel(channel),
+  };
+
   async listChannels(): Promise<ChannelProfile[]> {
     return readJsonStore("channels.json", ChannelsList, []);
   }
@@ -97,7 +118,9 @@ export class LocalJsonRepository implements AppRepository {
     return job;
   }
 
-  async appendLedgerEntry(entry: CreditLedgerEntry): Promise<CreditLedgerEntry> {
+  async appendLedgerEntry(
+    entry: CreditLedgerEntry
+  ): Promise<CreditLedgerEntry> {
     const list = await this.listLedgerEntries();
     list.push(entry);
     await writeJsonStore("ledger.json", list, LedgerList);

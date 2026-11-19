@@ -6,8 +6,23 @@ import type {
   CreditLedgerEntry,
 } from "@/schemas";
 
+export type ChannelCreateInput = Omit<
+  ChannelProfile,
+  "id" | "createdAt" | "updatedAt"
+>;
+
+export interface ChannelOperations {
+  list(): Promise<ChannelProfile[]>;
+  get(id: string): Promise<ChannelProfile | null>;
+  create(input: ChannelCreateInput): Promise<ChannelProfile>;
+  save(channel: ChannelProfile): Promise<ChannelProfile>;
+}
+
 export interface AppRepository {
-  // Channels
+  // Direct channel operations
+  channels: ChannelOperations;
+
+  // Channels legacy / direct methods
   listChannels(): Promise<ChannelProfile[]>;
   getChannel(id: string): Promise<ChannelProfile | null>;
   saveChannel(channel: ChannelProfile): Promise<ChannelProfile>;
