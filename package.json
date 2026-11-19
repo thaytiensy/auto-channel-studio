@@ -13,6 +13,7 @@
     "visual:check": "node scripts/visual-check.mjs"
   },
   "dependencies": {
+    "@google/genai": "^3.6.1",
     "lucide-react": "^1.76.0",
     "next": "16.4.6",
     "react": "19.3.0",

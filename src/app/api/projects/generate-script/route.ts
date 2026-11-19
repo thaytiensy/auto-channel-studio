@@ -7,6 +7,7 @@ import {
 } from "@/schemas";
 import { getRepository } from "@/lib/storage";
 import { scanScriptForBannedWords } from "@/lib/auditor/policy-scanner";
+import { generateChannelScript } from "@/lib/ai/gemini-script";
 import {
   mockGenerateTTS,
   getAudioDurationMs,
@@ -35,62 +36,15 @@ export async function POST(req: Request): Promise<NextResponse> {
     const projectId = crypto.randomUUID();
     const now = new Date().toISOString();
 
-    // Select a banned word to inject into scene 2 for policy scanner verification
-    const injectedBannedWord =
-      channel.bannedWords.length > 0 ? channel.bannedWords[0] : "lừa đảo";
+    // Generate real script via Gemini API
+    const baseScenes = await generateChannelScript({
+      projectId,
+      channel,
+      topic,
+      aspectRatio: "9:16",
+    });
 
-    const baseScenes: Scene[] = [
-      {
-        sceneId: crypto.randomUUID(),
-        projectId,
-        orderIndex: 0,
-        lockStatus: "draft",
-        spokenText: `Chào mừng bạn đến với kênh ${channel.name}. Hôm nay chúng ta sẽ tìm hiểu về: ${topic}.`,
-        actualDurationMs: 0,
-        wordTimestamps: [],
-        safeZoneProfile: "tiktok_reels_9_16",
-        textHook: `Khám phá ${topic}`,
-        visualLayer: {
-          sourceType: "ai_image_ken_burns",
-          motionPreset: "zoom_in",
-          promptHash: "prompt_scene_0",
-        },
-      },
-      {
-        sceneId: crypto.randomUUID(),
-        projectId,
-        orderIndex: 1,
-        lockStatus: "draft",
-        spokenText: `Nhiều chuyên gia cảnh báo rằng đây có thể là một chiêu trò ${injectedBannedWord} rất tinh vi mà bạn cần hết sức cảnh giác.`,
-        actualDurationMs: 0,
-        wordTimestamps: [],
-        safeZoneProfile: "tiktok_reels_9_16",
-        textHook: "Cảnh báo quan trọng",
-        visualLayer: {
-          sourceType: "ai_image_ken_burns",
-          motionPreset: "pan_left",
-          promptHash: "prompt_scene_1",
-        },
-      },
-      {
-        sceneId: crypto.randomUUID(),
-        projectId,
-        orderIndex: 2,
-        lockStatus: "draft",
-        spokenText: `Hãy nhấn theo dõi để cập nhật thêm các phân tích chuyên sâu tiếp theo từ ${channel.name}!`,
-        actualDurationMs: 0,
-        wordTimestamps: [],
-        safeZoneProfile: "tiktok_reels_9_16",
-        textHook: "Đăng ký ngay",
-        visualLayer: {
-          sourceType: "ai_image_ken_burns",
-          motionPreset: "zoom_out",
-          promptHash: "prompt_scene_2",
-        },
-      },
-    ];
-
-    // Generate per-scene mock audio and probe duration via ffprobe
+    // Populate audio duration
     const scenesWithAudio: Scene[] = await Promise.all(
       baseScenes.map(async (scene) => {
         const audioPath = await mockGenerateTTS(
@@ -126,13 +80,11 @@ export async function POST(req: Request): Promise<NextResponse> {
     const project: ProjectManifest = ProjectManifestSchema.parse(rawProject);
     await repo.projects.create(project);
 
-    // Scan all spoken text for banned words
+    // Audit script for banned words
     const fullScript = project.scenes.map((s) => s.spokenText).join(" ");
     const policyWarnings = scanScriptForBannedWords(
       fullScript,
-      channel.bannedWords.length > 0
-        ? channel.bannedWords
-        : [injectedBannedWord]
+      channel.bannedWords
     );
 
     return NextResponse.json(

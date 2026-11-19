@@ -17,6 +17,7 @@ export const VisualLayerSchema = z.object({
   ]),
   assetId: z.string().optional(),
   assetPath: z.string().optional(),
+  visualPrompt: z.string().optional().default(""),
   motionPreset: z.string().optional(),
   promptHash: z.string().optional(),
 });
