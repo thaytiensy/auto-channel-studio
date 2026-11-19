@@ -3,11 +3,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { promisify } from "node:util";
 import { buildSceneAssFile } from "./subtitle-builder.mjs";
-import { escapeAssFilterPath } from "./ffmpeg-filters.mjs";
+import {
+  escapeAssFilterPath,
+  buildKenBurnsFilter,
+} from "./ffmpeg-filters.mjs";
 
 const execFileAsync = promisify(execFile);
 
-// Windows fallback for fresh WinGet installations before terminal restart
 if (process.platform === "win32") {
   const localApp = process.env.LOCALAPPDATA || "";
   const gyanBin = `${localApp}\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-9.0.2-full_build\\bin`;
@@ -16,9 +18,6 @@ if (process.platform === "win32") {
   }
 }
 
-/**
- * Validates if the given file has a valid media header and non-zero duration.
- */
 export async function hasValidMediaHeader(filePath) {
   if (!filePath || typeof filePath !== "string" || !fs.existsSync(filePath)) {
     return false;
@@ -47,13 +46,22 @@ export async function hasValidMediaHeader(filePath) {
   }
 }
 
-/**
- * Renders a scene into a 1080x1920 MP4 file with subtitles and audio.
- */
+function hasValidImage(filePath) {
+  if (!filePath || typeof filePath !== "string" || !fs.existsSync(filePath)) {
+    return false;
+  }
+  try {
+    return fs.statSync(filePath).size > 1024;
+  } catch {
+    return false;
+  }
+}
+
 export async function renderSceneMp4({
   sceneId,
   durationMs = 3500,
   audioPath = "",
+  visualPath = "",
   outputDir,
   spokenText = "",
   textHook = "",
@@ -68,17 +76,10 @@ export async function renderSceneMp4({
   const outputPath = path.join(outputDir, `${sceneId}.mp4`);
 
   const validAudio = await hasValidMediaHeader(audioPath);
-  let audioInputArgs;
-  let usedSilentFallback = false;
+  const audioArgs = validAudio
+    ? ["-i", audioPath]
+    : ["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"];
 
-  if (validAudio) {
-    audioInputArgs = ["-i", audioPath];
-  } else {
-    audioInputArgs = ["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"];
-    usedSilentFallback = true;
-  }
-
-  // Generate safe zone subtitle file (.ass)
   const assPath = buildSceneAssFile({
     sceneId,
     spokenText,
@@ -86,16 +87,31 @@ export async function renderSceneMp4({
     durationMs,
     outputDir,
   });
-  const assFilter = escapeAssFilterPath(assPath);
+
+  const validImage = hasValidImage(visualPath);
+  let visualArgs;
+  let videoFilter;
+
+  if (validImage) {
+    visualArgs = ["-loop", "1", "-i", visualPath];
+    videoFilter = buildKenBurnsFilter({ durationSec, assPath });
+  } else {
+    visualArgs = [
+      "-f",
+      "lavfi",
+      "-i",
+      `color=c=#0f172a:s=1080x1920:r=30:d=${durationSec}`,
+    ];
+    videoFilter = escapeAssFilterPath(assPath);
+  }
 
   const ffmpegArgs = [
-    "-f",
-    "lavfi",
-    "-i",
-    `color=c=#0f172a:s=1080x1920:r=30:d=${durationSec}`,
-    ...audioInputArgs,
+    ...visualArgs,
+    ...audioArgs,
+    "-t",
+    String(durationSec),
     "-vf",
-    assFilter,
+    videoFilter,
     "-c:v",
     "libx264",
     "-pix_fmt",
@@ -109,15 +125,16 @@ export async function renderSceneMp4({
     outputPath,
   ];
 
-  await execFileAsync("ffmpeg", ffmpegArgs, { timeout: 35000 });
+  await execFileAsync("ffmpeg", ffmpegArgs, { timeout: 45000 });
 
   if (!fs.existsSync(outputPath)) {
-    throw new Error(`FFmpeg finished but output file not found: ${outputPath}`);
+    throw new Error(`Output file not generated: ${outputPath}`);
   }
 
   return {
     videoPath: outputPath,
     assPath,
-    usedSilentFallback,
+    hasImage: validImage,
+    usedSilentFallback: !validAudio,
   };
 }

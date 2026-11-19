@@ -90,8 +90,14 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === "/render-scene" && req.method === "POST") {
     let lockKey = null;
     try {
-      const { sceneId, durationMs, audioPath, spokenText, textHook } =
-        await readJsonBody(req);
+      const {
+        sceneId,
+        durationMs,
+        audioPath,
+        visualPath,
+        spokenText,
+        textHook,
+      } = await readJsonBody(req);
       if (!sceneId || typeof sceneId !== "string") {
         sendJson(res, 400, { status: "error", message: "sceneId is required" });
         return;
@@ -105,6 +111,7 @@ const server = http.createServer(async (req, res) => {
         sceneId,
         durationMs: Number(durationMs) || 3500,
         audioPath: audioPath || "",
+        visualPath: visualPath || "",
         spokenText: spokenText || "",
         textHook: textHook || "",
         outputDir,

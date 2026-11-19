@@ -8,6 +8,7 @@ import {
 import { getRepository } from "@/lib/storage";
 import { scanScriptForBannedWords } from "@/lib/auditor/policy-scanner";
 import { generateChannelScript } from "@/lib/ai/gemini-script";
+import { generateSceneVisual } from "@/lib/ai/gemini-visual";
 import {
   generateSceneSpeech,
   getAudioDurationMs,
@@ -36,7 +37,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     const projectId = crypto.randomUUID();
     const now = new Date().toISOString();
 
-    // Generate real script via Gemini API
+    // 1. Generate real script via Gemini API
     const baseScenes = await generateChannelScript({
       projectId,
       channel,
@@ -44,19 +45,36 @@ export async function POST(req: Request): Promise<NextResponse> {
       aspectRatio: "9:16",
     });
 
-    // Generate real speech audio via MsEdgeTTS and probe duration
-    const scenesWithAudio: Scene[] = await Promise.all(
+    // 2. Generate real audio and real visuals per scene
+    const completedScenes: Scene[] = await Promise.all(
       baseScenes.map(async (scene) => {
         const audioPath = await generateSceneSpeech({
           text: scene.spokenText,
           sceneId: scene.sceneId,
         });
         const actualDurationMs = await getAudioDurationMs(audioPath);
-        return {
+
+        const visualPrompt = scene.visualLayer?.visualPrompt || "";
+        const assetPath = await generateSceneVisual({
+          visualPrompt,
+          sceneId: scene.sceneId,
+          aspectRatio: "9:16",
+        });
+
+        const completedScene: Scene = {
           ...scene,
           audioPath,
           actualDurationMs,
+          visualLayer: {
+            sourceType: "ai_image_ken_burns",
+            assetId: scene.visualLayer?.assetId,
+            motionPreset: scene.visualLayer?.motionPreset,
+            promptHash: scene.visualLayer?.promptHash,
+            visualPrompt,
+            assetPath,
+          },
         };
+        return completedScene;
       })
     );
 
@@ -72,7 +90,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         maxCostCents: 35,
         spentCents: 0,
       },
-      scenes: scenesWithAudio,
+      scenes: completedScenes,
       createdAt: now,
       updatedAt: now,
     };
@@ -80,7 +98,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     const project: ProjectManifest = ProjectManifestSchema.parse(rawProject);
     await repo.projects.create(project);
 
-    // Audit script for banned words
+    // 3. Audit script for banned words
     const fullScript = project.scenes.map((s) => s.spokenText).join(" ");
     const policyWarnings = scanScriptForBannedWords(
       fullScript,

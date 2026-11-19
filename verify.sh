@@ -23,7 +23,7 @@ handle_failure() {
     } catch {}
     const handoff = {
       status: 'failed',
-      task: 'Sprint 1.6 System Hardening',
+      task: 'Phase 2 Real AI Production Pipeline',
       failed_step: '$failed_step',
       errors: errLines,
       next_step: 'Diagnose and fix errors reported in .verify-err.log'
@@ -61,34 +61,32 @@ node -e "
   const fs = require('fs');
   const handoff = {
     status: 'success',
-    task: 'Sprint 1.6 System Hardening, Project Persistence, HTTP 206 Streaming & Visual Audit',
+    task: 'Phase 2 Real AI Production Pipeline (Gemini Script + Neural TTS + Safe Zone Subtitles + Ken Burns Visuals)',
     timestamp: new Date().toISOString(),
     files_modified: [
-      'src/lib/storage/repository.interface.ts',
-      'src/lib/storage/local-json.repository.ts',
-      'src/app/api/projects/route.ts',
-      'src/app/api/projects/[projectId]/route.ts',
+      'src/schemas/scene.schema.ts',
+      'src/lib/ai/gemini-script.ts',
+      'src/lib/ai/gemini-visual.ts',
+      'src/lib/audio/audio-processor.ts',
       'src/app/api/projects/generate-script/route.ts',
-      'src/app/api/projects/download/[projectId]/route.ts',
-      'src/app/projects/page.tsx',
-      'src/app/projects/[projectId]/page.tsx',
-      'src/app/page.tsx',
+      'src/app/api/projects/render-scene/route.ts',
       'src/components/SceneBlock.tsx',
       'src/components/SceneTextEditor.tsx',
-      'worker/cleanup.mjs',
+      'worker/subtitle-builder.mjs',
+      'worker/ffmpeg-filters.mjs',
+      'worker/render-scene.mjs',
+      'worker/concat-project.mjs',
       'worker/server.mjs',
-      'scripts/visual-check.mjs',
-      'verify.sh',
       'PROJECT_STATE.md'
     ],
     errors: [],
-    next_step: 'Sprint 2.1 Real AI Integration (Gemini API Script + Real TTS + Hybrid Visuals)'
+    next_step: 'Phase 3 Batch Production & Publishing Pipelines'
   };
   fs.writeFileSync('HANDOFF.json', JSON.stringify(handoff, null, 2), 'utf8');
 "
 
 git add -A
-git commit -m "checkpoint: verified sprint 1.6 - core engine hardened" || true
+git commit -m "checkpoint: verified phase 2 - full real ai video pipeline" || true
 
 echo "=== [SUCCESS] Verification passed 100% ==="
 exit 0

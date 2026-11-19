@@ -53,6 +53,9 @@ export async function concatProjectMp4({ projectId, scenes, outputDir }) {
         sceneId: scene.sceneId,
         durationMs: scene.actualDurationMs || 3500,
         audioPath: scene.audioPath || "",
+        visualPath: scene.visualLayer?.assetPath || "",
+        spokenText: scene.spokenText || "",
+        textHook: scene.textHook || "",
         outputDir,
       });
     }

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   Film, Clock, Lock, Sparkles, Volume2, Video,
-  Loader2, Eye, AlertCircle, CheckCircle2, Pencil,
+  Loader2, Eye, AlertCircle, CheckCircle2, Pencil, Image as ImageIcon,
 } from "lucide-react";
 import type { Scene } from "@/schemas";
 import type { WorkerRenderResponse } from "@/app/api/projects/render-scene/route";
@@ -34,6 +34,9 @@ export function SceneBlock({
   const [renderError, setRenderError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [displayText, setDisplayText] = useState(scene.spokenText);
+  const [displayPrompt, setDisplayPrompt] = useState(
+    scene.visualLayer?.visualPrompt ?? ""
+  );
 
   const audioFileName = scene.audioPath
     ? (scene.audioPath.split(/[/\\]/).pop() ?? scene.audioPath)
@@ -93,15 +96,24 @@ export function SceneBlock({
 
       {editing && projectId ? (
         <SceneTextEditor
-          text={displayText}
+          spokenText={displayText}
+          visualPrompt={displayPrompt}
           projectId={projectId}
           sceneId={scene.sceneId}
           allScenesJson={allScenesJson}
-          onSaved={(t) => { setDisplayText(t); setEditing(false); onSceneUpdated?.(scene.sceneId, t); }}
+          onSaved={(t, p) => { setDisplayText(t); setDisplayPrompt(p); setEditing(false); onSceneUpdated?.(scene.sceneId, t); }}
           onCancel={() => setEditing(false)}
         />
       ) : (
-        <p className="p-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-100 dark:border-zinc-800 rounded-lg text-xs leading-relaxed text-zinc-800 dark:text-zinc-200">{displayText}</p>
+        <div className="space-y-1.5">
+          <p className="p-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-100 dark:border-zinc-800 rounded-lg text-xs leading-relaxed text-zinc-800 dark:text-zinc-200">{displayText}</p>
+          {displayPrompt && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800/40 rounded-lg text-[11px] text-zinc-500 truncate" title={displayPrompt}>
+              <ImageIcon className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
+              <span className="truncate italic">{displayPrompt}</span>
+            </div>
+          )}
+        </div>
       )}
 
       <div className="p-2.5 bg-zinc-100/70 dark:bg-zinc-800/40 border border-zinc-200/60 dark:border-zinc-800 rounded-lg text-xs text-zinc-600 dark:text-zinc-300 flex items-center justify-between">
