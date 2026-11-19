@@ -45,38 +45,36 @@ export async function POST(req: Request): Promise<NextResponse> {
       aspectRatio: "9:16",
     });
 
-    // 2. Generate real audio and real visuals per scene
-    const completedScenes: Scene[] = await Promise.all(
-      baseScenes.map(async (scene) => {
-        const audioPath = await generateSceneSpeech({
-          text: scene.spokenText,
-          sceneId: scene.sceneId,
-        });
-        const actualDurationMs = await getAudioDurationMs(audioPath);
+    // 2. Generate real audio and real visuals per scene sequentially
+    const completedScenes: Scene[] = [];
+    for (const scene of baseScenes) {
+      const audioPath = await generateSceneSpeech({
+        text: scene.spokenText,
+        sceneId: scene.sceneId,
+      });
+      const actualDurationMs = await getAudioDurationMs(audioPath);
 
-        const visualPrompt = scene.visualLayer?.visualPrompt || "";
-        const assetPath = await generateSceneVisual({
+      const visualPrompt = scene.visualLayer?.visualPrompt || "";
+      const assetPath = await generateSceneVisual({
+        visualPrompt,
+        sceneId: scene.sceneId,
+        aspectRatio: "9:16",
+      });
+
+      completedScenes.push({
+        ...scene,
+        audioPath,
+        actualDurationMs,
+        visualLayer: {
+          sourceType: "ai_image_ken_burns",
+          assetId: scene.visualLayer?.assetId,
+          motionPreset: scene.visualLayer?.motionPreset,
+          promptHash: scene.visualLayer?.promptHash,
           visualPrompt,
-          sceneId: scene.sceneId,
-          aspectRatio: "9:16",
-        });
-
-        const completedScene: Scene = {
-          ...scene,
-          audioPath,
-          actualDurationMs,
-          visualLayer: {
-            sourceType: "ai_image_ken_burns",
-            assetId: scene.visualLayer?.assetId,
-            motionPreset: scene.visualLayer?.motionPreset,
-            promptHash: scene.visualLayer?.promptHash,
-            visualPrompt,
-            assetPath,
-          },
-        };
-        return completedScene;
-      })
-    );
+          assetPath,
+        },
+      });
+    }
 
     const rawProject = {
       schemaVersion: "2.0.0" as const,

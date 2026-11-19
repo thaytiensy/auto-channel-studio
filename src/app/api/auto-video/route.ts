@@ -66,30 +66,28 @@ export async function POST(req: Request): Promise<NextResponse> {
       aspectRatio: "9:16",
     });
 
-    // 2. Tạo Audio Neural TTS & Ảnh AI Imagen per scene
-    const completedScenes: Scene[] = await Promise.all(
-      baseScenes.map(async (scene) => {
-        const audioPath = await generateSceneSpeech({ text: scene.spokenText, sceneId: scene.sceneId });
-        const actualDurationMs = await getAudioDurationMs(audioPath);
-        const visualPrompt = scene.visualLayer?.visualPrompt || "";
-        const assetPath = await generateSceneVisual({ visualPrompt, sceneId: scene.sceneId, aspectRatio: "9:16" });
+    // 2. Tạo Audio Neural TTS & Ảnh AI per scene tuần tự để tránh lỗi socket
+    const completedScenes: Scene[] = [];
+    for (const scene of baseScenes) {
+      const audioPath = await generateSceneSpeech({ text: scene.spokenText, sceneId: scene.sceneId });
+      const actualDurationMs = await getAudioDurationMs(audioPath);
+      const visualPrompt = scene.visualLayer?.visualPrompt || "";
+      const assetPath = await generateSceneVisual({ visualPrompt, sceneId: scene.sceneId, aspectRatio: "9:16" });
 
-        const sc: Scene = {
-          ...scene,
-          audioPath,
-          actualDurationMs,
-          visualLayer: {
-            sourceType: "ai_image_ken_burns",
-            assetId: scene.visualLayer?.assetId,
-            motionPreset: scene.visualLayer?.motionPreset,
-            promptHash: scene.visualLayer?.promptHash,
-            visualPrompt,
-            assetPath,
-          },
-        };
-        return sc;
-      })
-    );
+      completedScenes.push({
+        ...scene,
+        audioPath,
+        actualDurationMs,
+        visualLayer: {
+          sourceType: "ai_image_ken_burns",
+          assetId: scene.visualLayer?.assetId,
+          motionPreset: scene.visualLayer?.motionPreset,
+          promptHash: scene.visualLayer?.promptHash,
+          visualPrompt,
+          assetPath,
+        },
+      });
+    }
 
     const project: ProjectManifest = ProjectManifestSchema.parse({
       schemaVersion: "2.0.0" as const,
