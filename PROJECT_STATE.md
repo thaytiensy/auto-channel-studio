@@ -80,8 +80,12 @@
   - Auto MXH Video Studio UI (`/auto`) with real-time pipeline status and 1-click fixed link copying
   - Desktop Packaging: `start-app.bat` launcher, `scripts/start-all.mjs` multi-process orchestrator, and Desktop Shortcut `.lnk`
   - Command-line automation tool `scripts/auto-cli.mjs` (`npm run auto:video`)
+- **Production Cloud Deployment (GitHub + Vercel)**:
+  - GitHub Remote Repository: `https://github.com/thaytiensy/auto-channel-studio`
+  - Vercel Production Deployment: `https://auto-channel-studio.vercel.app`
+  - Continuous Deployment: Connected GitHub `main` branch to Vercel auto-deploy pipeline
 
 ## 5. In-Progress & Blockers
-- **Status**: Packaging & Auto MXH Pipeline complete — Packaged desktop application & fixed-link video engine live
+- **Status**: Live in Production — GitHub Repository and Vercel Cloud Live Link Active (HTTP 200 OK)
 - **Blockers**: None
 - **Next**: Phase 3 — Scheduled Background Cron & Social Media Auto-Publishing

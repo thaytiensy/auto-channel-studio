@@ -50,3 +50,5 @@ next-env.d.ts
 
 # visual check snapshots
 .preview/
+
+.vercel
