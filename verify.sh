@@ -44,6 +44,8 @@ node --check worker/server.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --chec
 node --check worker/render-scene.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --check worker/render-scene.mjs"
 node --check worker/concat-project.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --check worker/concat-project.mjs"
 node --check worker/cleanup.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --check worker/cleanup.mjs"
+node --check worker/subtitle-builder.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --check worker/subtitle-builder.mjs"
+node --check worker/ffmpeg-filters.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --check worker/ffmpeg-filters.mjs"
 node --check scripts/visual-check.mjs >> "$ERR_LOG" 2>&1 || handle_failure "node --check scripts/visual-check.mjs"
 
 echo "=== [4/4] Building Next.js into isolated .next-verify ==="

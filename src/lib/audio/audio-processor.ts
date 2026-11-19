@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
 
 const execFileAsync = promisify(execFile);
 
@@ -14,8 +15,77 @@ if (process.platform === "win32") {
   }
 }
 
+export interface GenerateSpeechOptions {
+  text: string;
+  sceneId: string;
+  voice?: string;
+}
+
+async function synthesizeToFile(
+  text: string,
+  outputPath: string,
+  voice: string
+): Promise<void> {
+  const tts = new MsEdgeTTS();
+  await tts.setMetadata(
+    voice,
+    OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3
+  );
+  const { audioStream } = tts.toStream(text);
+
+  return new Promise<void>((resolve, reject) => {
+    const fileStream = fs.createWriteStream(outputPath);
+    audioStream.pipe(fileStream);
+    fileStream.on("finish", () => {
+      fileStream.close();
+      resolve();
+    });
+    audioStream.on("error", (err) => {
+      fileStream.close();
+      reject(err);
+    });
+    fileStream.on("error", reject);
+  });
+}
+
 /**
- * Generates mock audio file for a given scene and returns its absolute path.
+ * Generates real Vietnamese neural speech using MsEdgeTTS with 1 retry.
+ */
+export async function generateSceneSpeech({
+  text,
+  sceneId,
+  voice = "vi-VN-HoaiMyNeural",
+}: GenerateSpeechOptions): Promise<string> {
+  const tmpDir = path.join(process.cwd(), "worker", "tmp");
+  fs.mkdirSync(tmpDir, { recursive: true });
+
+  const fileName = `${sceneId}.mp3`;
+  const filePath = path.join(tmpDir, fileName);
+
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      await synthesizeToFile(text, filePath, voice);
+      const stat = fs.statSync(filePath);
+      if (stat.size > 256) {
+        return filePath;
+      }
+      throw new Error(`File âm thanh tạo ra quá nhỏ (${stat.size} bytes)`);
+    } catch (err: unknown) {
+      lastError = err;
+      if (attempt < 2) {
+        await new Promise((res) => setTimeout(res, 600));
+      }
+    }
+  }
+
+  const detail =
+    lastError instanceof Error ? lastError.message : String(lastError);
+  throw new Error(`Tạo giọng đọc thất bại cho cảnh ${sceneId}: ${detail}`);
+}
+
+/**
+ * Legacy mock TTS generator preserved for compatibility.
  */
 export async function mockGenerateTTS(
   text: string,
@@ -23,19 +93,14 @@ export async function mockGenerateTTS(
 ): Promise<string> {
   const tmpDir = path.join(process.cwd(), "worker", "tmp");
   fs.mkdirSync(tmpDir, { recursive: true });
-
-  const fileName = `scene_${sceneId}.mp3`;
-  const filePath = path.join(tmpDir, fileName);
-
-  const mockPayload = `[MOCK_AUDIO_DATA_FOR_SCENE_${sceneId}]\nTimestamp: ${new Date().toISOString()}\nText: ${text}`;
+  const filePath = path.join(tmpDir, `scene_${sceneId}.mp3`);
+  const mockPayload = `[MOCK_AUDIO_FOR_SCENE_${sceneId}]\n${text}`;
   fs.writeFileSync(filePath, mockPayload, "utf-8");
-
   return filePath;
 }
 
 /**
  * Probes audio duration in milliseconds using ffprobe.
- * Catches errors on invalid media headers (e.g. mock files) and falls back safely to 3500ms.
  */
 export async function getAudioDurationMs(filePath: string): Promise<number> {
   try {
@@ -61,7 +126,7 @@ export async function getAudioDurationMs(filePath: string): Promise<number> {
   } catch (err: unknown) {
     const fileName = path.basename(filePath);
     console.warn(
-      `[ffprobe] Expected non-media fallback for mock audio "${fileName}":`,
+      `[ffprobe] Fallback for audio "${fileName}":`,
       err instanceof Error ? err.message : String(err)
     );
     return 3500;

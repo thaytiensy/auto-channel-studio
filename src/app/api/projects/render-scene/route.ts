@@ -5,6 +5,9 @@ const RenderSceneInputSchema = z.object({
   sceneId: z.string().min(1),
   durationMs: z.number().positive(),
   audioPath: z.string().optional().default(""),
+  spokenText: z.string().optional().default(""),
+  textHook: z.string().optional().default(""),
+  visualPath: z.string().optional().default(""),
 });
 
 export type RenderSceneInput = z.infer<typeof RenderSceneInputSchema>;

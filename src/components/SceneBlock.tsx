@@ -53,6 +53,9 @@ export function SceneBlock({
           sceneId: scene.sceneId,
           durationMs: scene.actualDurationMs || 3500,
           audioPath: scene.audioPath || "",
+          spokenText: displayText || scene.spokenText || "",
+          textHook: scene.textHook || "",
+          visualPath: scene.visualLayer?.assetPath || "",
         }),
       });
       const data = (await res.json()) as WorkerRenderResponse & { error?: string };

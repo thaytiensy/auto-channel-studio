@@ -9,7 +9,7 @@ import { getRepository } from "@/lib/storage";
 import { scanScriptForBannedWords } from "@/lib/auditor/policy-scanner";
 import { generateChannelScript } from "@/lib/ai/gemini-script";
 import {
-  mockGenerateTTS,
+  generateSceneSpeech,
   getAudioDurationMs,
 } from "@/lib/audio/audio-processor";
 
@@ -44,13 +44,13 @@ export async function POST(req: Request): Promise<NextResponse> {
       aspectRatio: "9:16",
     });
 
-    // Populate audio duration
+    // Generate real speech audio via MsEdgeTTS and probe duration
     const scenesWithAudio: Scene[] = await Promise.all(
       baseScenes.map(async (scene) => {
-        const audioPath = await mockGenerateTTS(
-          scene.spokenText,
-          scene.sceneId
-        );
+        const audioPath = await generateSceneSpeech({
+          text: scene.spokenText,
+          sceneId: scene.sceneId,
+        });
         const actualDurationMs = await getAudioDurationMs(audioPath);
         return {
           ...scene,

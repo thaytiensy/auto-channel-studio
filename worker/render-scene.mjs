@@ -2,6 +2,8 @@ import { execFile } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { promisify } from "node:util";
+import { buildSceneAssFile } from "./subtitle-builder.mjs";
+import { escapeAssFilterPath } from "./ffmpeg-filters.mjs";
 
 const execFileAsync = promisify(execFile);
 
@@ -16,22 +18,14 @@ if (process.platform === "win32") {
 
 /**
  * Validates if the given file has a valid media header and non-zero duration.
- * Returns false if file is missing, size <= 512 bytes, or ffprobe fails.
  */
 export async function hasValidMediaHeader(filePath) {
-  if (!filePath || typeof filePath !== "string") {
+  if (!filePath || typeof filePath !== "string" || !fs.existsSync(filePath)) {
     return false;
   }
-
-  if (!fs.existsSync(filePath)) {
-    return false;
-  }
-
   try {
     const stat = fs.statSync(filePath);
-    if (stat.size <= 512) {
-      return false;
-    }
+    if (stat.size <= 512) return false;
 
     const { stdout } = await execFileAsync(
       "ffprobe",
@@ -46,7 +40,6 @@ export async function hasValidMediaHeader(filePath) {
       ],
       { timeout: 3000 }
     );
-
     const sec = parseFloat(stdout.trim());
     return !isNaN(sec) && sec > 0;
   } catch {
@@ -55,14 +48,15 @@ export async function hasValidMediaHeader(filePath) {
 }
 
 /**
- * Renders a scene into a 1080x1920 MP4 file with libx264 and yuv420p pixel format.
- * Automatically falls back to silent stereo audio if audioPath is invalid.
+ * Renders a scene into a 1080x1920 MP4 file with subtitles and audio.
  */
 export async function renderSceneMp4({
   sceneId,
-  durationMs,
-  audioPath,
+  durationMs = 3500,
+  audioPath = "",
   outputDir,
+  spokenText = "",
+  textHook = "",
 }) {
   if (!sceneId) {
     throw new Error("sceneId is required for renderSceneMp4");
@@ -70,10 +64,7 @@ export async function renderSceneMp4({
 
   fs.mkdirSync(outputDir, { recursive: true });
 
-  const durationSec = Math.max(
-    1,
-    Number(((durationMs || 3500) / 1000).toFixed(3))
-  );
+  const durationSec = Math.max(1, Number((durationMs / 1000).toFixed(3)));
   const outputPath = path.join(outputDir, `${sceneId}.mp4`);
 
   const validAudio = await hasValidMediaHeader(audioPath);
@@ -87,12 +78,24 @@ export async function renderSceneMp4({
     usedSilentFallback = true;
   }
 
+  // Generate safe zone subtitle file (.ass)
+  const assPath = buildSceneAssFile({
+    sceneId,
+    spokenText,
+    textHook,
+    durationMs,
+    outputDir,
+  });
+  const assFilter = escapeAssFilterPath(assPath);
+
   const ffmpegArgs = [
     "-f",
     "lavfi",
     "-i",
     `color=c=#0f172a:s=1080x1920:r=30:d=${durationSec}`,
     ...audioInputArgs,
+    "-vf",
+    assFilter,
     "-c:v",
     "libx264",
     "-pix_fmt",
@@ -106,7 +109,7 @@ export async function renderSceneMp4({
     outputPath,
   ];
 
-  await execFileAsync("ffmpeg", ffmpegArgs, { timeout: 30000 });
+  await execFileAsync("ffmpeg", ffmpegArgs, { timeout: 35000 });
 
   if (!fs.existsSync(outputPath)) {
     throw new Error(`FFmpeg finished but output file not found: ${outputPath}`);
@@ -114,6 +117,7 @@ export async function renderSceneMp4({
 
   return {
     videoPath: outputPath,
+    assPath,
     usedSilentFallback,
   };
 }
