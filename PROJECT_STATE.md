@@ -1,7 +1,7 @@
 # Auto Channel Studio — Project State
 
 ## 1. Project Overview & Scope
-- **Current Sprint**: Sprint 1.2 — Channel Memory, Policy Auditor & Mock Script Engine
+- **Current Sprint**: Sprint 1.3 — Per-Scene Audio Generator & ffprobe Validation
 - **Runtime & Framework Versions**:
   - **Next.js**: 16.4.6 (App Router)
   - **React**: 19.3.0
@@ -44,8 +44,12 @@
   - Mock Script Engine (`src/app/api/projects/generate-script/route.ts` with 3-scene mock manifest and policy check)
   - Scene UI Component (`src/components/SceneBlock.tsx`)
   - Project Creation & Script Review Studio (`src/app/projects/new/page.tsx` with red policy alert banner)
+- **Sprint 1.3 — Per-Scene Audio Generator & ffprobe Validation**:
+  - Audio Processor Module (`src/lib/audio/audio-processor.ts`) with `mockGenerateTTS` (atomic path creation in `worker/tmp`) and `getAudioDurationMs` (`ffprobe` duration probing with non-crashing 3500ms fallback)
+  - Integration into Script Generation API (`src/app/api/projects/generate-script/route.ts`) generating audio paths and probed duration per scene
+  - Updated Scene UI (`src/components/SceneBlock.tsx`) displaying audio path and duration without native audio elements
 
 ## 5. In-Progress & Blockers
-- **Status**: Sprint 1.2 complete and verified
+- **Status**: Sprint 1.3 complete and verified
 - **Blockers**: None
-- **Next**: Sprint 1.3 — Per-Scene Audio Generation & ffprobe Validation
+- **Next**: Sprint 1.4 — FFmpeg Video Rendering & Safe Zone Preview

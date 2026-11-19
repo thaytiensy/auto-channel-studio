@@ -7,6 +7,10 @@ import {
 } from "@/schemas";
 import { getRepository } from "@/lib/storage";
 import { scanScriptForBannedWords } from "@/lib/auditor/policy-scanner";
+import {
+  mockGenerateTTS,
+  getAudioDurationMs,
+} from "@/lib/audio/audio-processor";
 
 const GenerateScriptInputSchema = z.object({
   channelId: z.string().min(1),
@@ -35,14 +39,14 @@ export async function POST(req: Request): Promise<NextResponse> {
     const injectedBannedWord =
       channel.bannedWords.length > 0 ? channel.bannedWords[0] : "lừa đảo";
 
-    const scenes: Scene[] = [
+    const baseScenes: Scene[] = [
       {
         sceneId: crypto.randomUUID(),
         projectId,
         orderIndex: 0,
         lockStatus: "draft",
         spokenText: `Chào mừng bạn đến với kênh ${channel.name}. Hôm nay chúng ta sẽ tìm hiểu về: ${topic}.`,
-        actualDurationMs: 3500,
+        actualDurationMs: 0,
         wordTimestamps: [],
         safeZoneProfile: "tiktok_reels_9_16",
         textHook: `Khám phá ${topic}`,
@@ -58,7 +62,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         orderIndex: 1,
         lockStatus: "draft",
         spokenText: `Nhiều chuyên gia cảnh báo rằng đây có thể là một chiêu trò ${injectedBannedWord} rất tinh vi mà bạn cần hết sức cảnh giác.`,
-        actualDurationMs: 4200,
+        actualDurationMs: 0,
         wordTimestamps: [],
         safeZoneProfile: "tiktok_reels_9_16",
         textHook: "Cảnh báo quan trọng",
@@ -74,7 +78,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         orderIndex: 2,
         lockStatus: "draft",
         spokenText: `Hãy nhấn theo dõi để cập nhật thêm các phân tích chuyên sâu tiếp theo từ ${channel.name}!`,
-        actualDurationMs: 3000,
+        actualDurationMs: 0,
         wordTimestamps: [],
         safeZoneProfile: "tiktok_reels_9_16",
         textHook: "Đăng ký ngay",
@@ -85,6 +89,22 @@ export async function POST(req: Request): Promise<NextResponse> {
         },
       },
     ];
+
+    // Generate per-scene mock audio and probe duration via ffprobe
+    const scenesWithAudio: Scene[] = await Promise.all(
+      baseScenes.map(async (scene) => {
+        const audioPath = await mockGenerateTTS(
+          scene.spokenText,
+          scene.sceneId
+        );
+        const actualDurationMs = await getAudioDurationMs(audioPath);
+        return {
+          ...scene,
+          audioPath,
+          actualDurationMs,
+        };
+      })
+    );
 
     const rawProject = {
       schemaVersion: "2.0.0" as const,
@@ -98,7 +118,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         maxCostCents: 35,
         spentCents: 0,
       },
-      scenes,
+      scenes: scenesWithAudio,
       createdAt: now,
       updatedAt: now,
     };
@@ -110,7 +130,9 @@ export async function POST(req: Request): Promise<NextResponse> {
     const fullScript = project.scenes.map((s) => s.spokenText).join(" ");
     const policyWarnings = scanScriptForBannedWords(
       fullScript,
-      channel.bannedWords.length > 0 ? channel.bannedWords : [injectedBannedWord]
+      channel.bannedWords.length > 0
+        ? channel.bannedWords
+        : [injectedBannedWord]
     );
 
     return NextResponse.json(

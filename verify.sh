@@ -26,7 +26,7 @@ handle_failure() {
 
     const handoff = {
       status: 'failed',
-      task: 'Sprint 1.2 Channel Memory & Script Engine',
+      task: 'Sprint 1.3 Per-Scene Audio & ffprobe',
       failed_step: '$failed_step',
       errors: errLines,
       next_step: 'Diagnose and fix errors reported in .verify-err.log'
@@ -60,32 +60,23 @@ node -e "
   const fs = require('fs');
   const handoff = {
     status: 'success',
-    task: 'Sprint 1.2 Channel Memory & Script Engine',
+    task: 'Sprint 1.3 Per-Scene Audio & ffprobe',
     timestamp: new Date().toISOString(),
     files_modified: [
-      'src/lib/storage/repository.interface.ts',
-      'src/lib/storage/local-json.repository.ts',
-      'src/app/api/channels/route.ts',
-      'src/components/BannedWordsInput.tsx',
-      'src/components/ChannelForm.tsx',
-      'src/app/channels/page.tsx',
-      'src/lib/auditor/policy-scanner.ts',
+      'src/lib/audio/audio-processor.ts',
       'src/app/api/projects/generate-script/route.ts',
       'src/components/SceneBlock.tsx',
-      'src/components/ProjectResultView.tsx',
-      'src/app/projects/new/page.tsx',
-      'src/app/page.tsx',
       'PROJECT_STATE.md',
       'verify.sh'
     ],
     errors: [],
-    next_step: 'Sprint 1.3 Per-Scene Audio Generation & ffprobe Validation'
+    next_step: 'Sprint 1.4 FFmpeg Video Rendering & Safe Zone Preview'
   };
   fs.writeFileSync('HANDOFF.json', JSON.stringify(handoff, null, 2), 'utf8');
 "
 
 git add -A
-git commit -m "checkpoint: verified sprint 1.2" || true
+git commit -m "checkpoint: verified sprint 1.3" || true
 
 echo "=== [SUCCESS] Verification passed 100% ==="
 exit 0

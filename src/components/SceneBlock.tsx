@@ -1,6 +1,6 @@
 "use client";
 
-import { Film, Clock, Lock, Sparkles } from "lucide-react";
+import { Film, Clock, Lock, Sparkles, Volume2 } from "lucide-react";
 import type { Scene } from "@/schemas";
 
 interface SceneBlockProps {
@@ -8,6 +8,10 @@ interface SceneBlockProps {
 }
 
 export function SceneBlock({ scene }: SceneBlockProps) {
+  const audioFileName = scene.audioPath
+    ? scene.audioPath.split(/[/\\]/).pop() || scene.audioPath
+    : "Chưa tạo";
+
   return (
     <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 shadow-sm space-y-3">
       <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-2.5">
@@ -28,7 +32,7 @@ export function SceneBlock({ scene }: SceneBlockProps) {
         <div className="flex items-center gap-2 text-xs text-zinc-500">
           <span className="flex items-center gap-1">
             <Clock className="w-3.5 h-3.5 text-zinc-400" />
-            {scene.actualDurationMs / 1000}s
+            Thời lượng: {scene.actualDurationMs / 1000}s
           </span>
           <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded text-[10px] uppercase font-mono">
             <Lock className="w-2.5 h-2.5 text-zinc-400" />
@@ -44,6 +48,22 @@ export function SceneBlock({ scene }: SceneBlockProps) {
         <p className="p-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-100 dark:border-zinc-800 rounded-lg text-xs leading-relaxed text-zinc-800 dark:text-zinc-200 font-sans">
           {scene.spokenText}
         </p>
+      </div>
+
+      <div className="p-2.5 bg-zinc-100/70 dark:bg-zinc-800/40 border border-zinc-200/60 dark:border-zinc-800 rounded-lg text-xs text-zinc-600 dark:text-zinc-300 flex items-center justify-between">
+        <span
+          className="flex items-center gap-1.5 truncate mr-2"
+          title={scene.audioPath || undefined}
+        >
+          <Volume2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+          <span className="font-medium text-zinc-500">Audio Path:</span>
+          <span className="font-mono text-[11px] truncate">
+            {audioFileName}
+          </span>
+        </span>
+        <span className="text-[11px] font-mono text-zinc-500 flex-shrink-0">
+          Thời lượng: {scene.actualDurationMs / 1000}s
+        </span>
       </div>
 
       <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] text-zinc-500">
