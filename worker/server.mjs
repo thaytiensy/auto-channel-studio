@@ -6,6 +6,15 @@ const execFileAsync = promisify(execFile);
 const HOST = "127.0.0.1";
 const PORT = Number(process.env.WORKER_PORT) || 4001;
 
+// Windows fallback for fresh WinGet installations before terminal restart
+if (process.platform === "win32") {
+  const localApp = process.env.LOCALAPPDATA || "";
+  const gyanBin = `${localApp}\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-9.0.2-full_build\\bin`;
+  if (localApp && !(process.env.PATH || "").includes(gyanBin)) {
+    process.env.PATH = `${gyanBin};${process.env.PATH || ""}`;
+  }
+}
+
 async function checkTool(cmd, args) {
   try {
     const { stdout } = await execFileAsync(cmd, args, { timeout: 3000 });
@@ -47,7 +56,10 @@ async function getHealthStatus() {
 }
 
 const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url || "/", `http://${req.headers.host || "127.0.0.1"}`);
+  const url = new URL(
+    req.url || "/",
+    `http://${req.headers.host || "127.0.0.1"}`
+  );
 
   if (url.pathname === "/health" && req.method === "GET") {
     try {
