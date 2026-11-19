@@ -47,3 +47,6 @@ worker/tmp/*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# visual check snapshots
+.preview/

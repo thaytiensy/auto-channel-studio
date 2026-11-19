@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Tv, Sparkles } from "lucide-react";
+import { Tv, Sparkles, FolderOpen } from "lucide-react";
 import { SystemHealthCard } from "@/components/SystemHealthCard";
 
 export default function Home() {
@@ -31,6 +31,13 @@ export default function Home() {
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             Sinh Kịch Bản Mới
+          </Link>
+          <Link
+            href="/projects"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 rounded-lg transition-colors"
+          >
+            <FolderOpen className="w-3.5 h-3.5 text-zinc-500" />
+            Dự Án Đã Lưu
           </Link>
         </div>
       </div>

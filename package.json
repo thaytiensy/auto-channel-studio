@@ -9,7 +9,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "worker": "node worker/server.mjs",
-    "verify": "bash verify.sh"
+    "verify": "bash verify.sh",
+    "visual:check": "node scripts/visual-check.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.76.0",
@@ -25,6 +26,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
+    "playwright": "^1.65.1",
     "tailwindcss": "4.3.3",
     "typescript": "^5"
   }

@@ -3,6 +3,7 @@ import type {
   AppRepository,
   ChannelCreateInput,
   ChannelOperations,
+  ProjectOperations,
 } from "./repository.interface";
 import { readJsonStore, writeJsonStore } from "./local-json-store";
 import {
@@ -40,6 +41,17 @@ export class LocalJsonRepository implements AppRepository {
       return this.saveChannel(channel);
     },
     save: (channel: ChannelProfile) => this.saveChannel(channel),
+  };
+
+  readonly projects: ProjectOperations = {
+    list: (channelId?: string) => this.listProjects(channelId),
+    getById: (projectId: string) => this.getProject(projectId),
+    create: (project: ProjectManifest) => this.saveProject(project),
+    update: async (project: ProjectManifest): Promise<ProjectManifest> => {
+      const existing = await this.getProject(project.projectId);
+      if (!existing) throw new Error(`Project ${project.projectId} not found`);
+      return this.saveProject(project);
+    },
   };
 
   async listChannels(): Promise<ChannelProfile[]> {

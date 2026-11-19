@@ -124,7 +124,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     };
 
     const project: ProjectManifest = ProjectManifestSchema.parse(rawProject);
-    await repo.saveProject(project);
+    await repo.projects.create(project);
 
     // Scan all spoken text for banned words
     const fullScript = project.scenes.map((s) => s.spokenText).join(" ");
